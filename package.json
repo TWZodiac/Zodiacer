@@ -1,5 +1,5 @@
 {
-  "name": "app-temp",
+  "name": "zodiacer",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -7,7 +7,9 @@
     "build": "next build",
     "deploy": "next build && node -e \"require('fs').writeFileSync('out/.nojekyll', '')\" && npx gh-pages -d out -t --repo git@github.com:TWZodiac/Zodiacer.git",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "build:questions": "node scripts/build-question-bank.mjs",
+    "test": "node --import tsx --test tests/*.test.ts"
   },
   "dependencies": {
     "clsx": "^2.1.1",
@@ -26,6 +28,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
     "tailwindcss": "^4",
+    "tsx": "^4.23.15",
     "typescript": "^5"
   }
 }
