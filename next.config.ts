@@ -6,6 +6,7 @@ const basePath = process.env.NEXT_BASE_PATH ?? "/Zodiacer";
 const nextConfig: NextConfig = {
   output: "export",
   basePath,
+  ...(process.env.NEXT_ASSET_PREFIX ? { assetPrefix: process.env.NEXT_ASSET_PREFIX } : {}),
 };
 
 export default nextConfig;
