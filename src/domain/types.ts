@@ -9,8 +9,13 @@ export interface QuestionOption {
 
 export interface Question {
   id: number;
-  /** "hint" 是星靈卡關時才會出現的絕招題，不在題庫裡 */
-  kind?: "hint";
+  /**
+   * "hint" 是星靈卡關時才會出現的絕招題，不在題庫裡；
+   * "pair" 是從多選題拆出來的二選一（見 pairs.ts）
+   */
+  kind?: "hint" | "pair";
+  /** 二選一題原本屬於哪一題 */
+  stem?: number;
   type: QuestionType;
   category: Category;
   text: string;

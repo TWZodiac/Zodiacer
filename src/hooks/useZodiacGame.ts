@@ -5,12 +5,14 @@ import bankJson from "@/data/question_bank.json";
 import { optionLeader, rankSigns } from "@/domain/engine";
 import { answer, answeredCount, hintState, startRound, undo, type HintState, type Round } from "@/domain/game";
 import { hintCandidates, isHint } from "@/domain/hint";
+import { toPairBank } from "@/domain/pairs";
 import { addPlay, emptyProfile, updateLastPlay, type Profile } from "@/domain/profile";
 import { unlockedIds } from "@/domain/achievements";
 import type { Question, QuestionBank } from "@/domain/types";
 import { loadProfile, saveProfile } from "@/lib/profileStorage";
 
-export const BANK = (bankJson as unknown as QuestionBank).questions as Question[];
+/** 多選題拆成二選一，星靈每題挑當下最能分辨的兩個選項 */
+export const BANK = toPairBank((bankJson as unknown as QuestionBank).questions as Question[]);
 
 export type Phase = "home" | "quiz" | "reveal" | "result";
 

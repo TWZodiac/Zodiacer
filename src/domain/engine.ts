@@ -12,6 +12,7 @@ export interface EngineConfig {
   /** 每題證據的折扣，避免刻板印象題讓機率暴衝 */
   alpha: number;
   minQuestions: number;
+  /** 二選一答得快，所以上限比以前的多選題高，但不超過原始規格的 20 題 */
   maxQuestions: number;
   /** 最高機率到達這個值就揭曉 */
   confidence: number;
@@ -27,7 +28,7 @@ export const DEFAULT_CONFIG: EngineConfig = {
   stereotype: 0.5,
   alpha: 1,
   minQuestions: 8,
-  maxQuestions: 16,
+  maxQuestions: 20,
   confidence: 0.6,
   topK: 4,
   repeatCategoryPenalty: 0.6,

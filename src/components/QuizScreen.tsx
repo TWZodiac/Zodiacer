@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { Fragment, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Home, Undo2 } from "lucide-react";
 import { SIGN_PROFILES } from "@/domain/signs";
@@ -8,6 +8,7 @@ import { hunch } from "@/domain/commentary";
 import { DEFAULT_CONFIG } from "@/domain/engine";
 import { answeredCount, type Round } from "@/domain/game";
 import { isHint } from "@/domain/hint";
+import { isPair } from "@/domain/pairs";
 import type { Reaction } from "@/hooks/useZodiacGame";
 import { StarChart } from "./StarChart";
 import { HintCard } from "./HintCard";
@@ -135,29 +136,50 @@ export function QuizScreen({
               {q.category}
             </span>
             <h2 className="font-display mb-6 text-2xl font-black leading-snug sm:text-[1.7rem]">{q.text}</h2>
-            <div className={q.type === "boolean" ? "grid grid-cols-2 gap-3" : "flex flex-col gap-3"}>
-              {q.options.map((opt, i) => (
-                <button key={opt.id} type="button" className="option" onClick={() => onChoose(opt.id)}>
-                  {q.type === "boolean" ? (
-                    <span className="w-full py-2 text-center text-lg">{BOOLEAN_LABEL[opt.text] ?? opt.text}</span>
-                  ) : (
-                    <>
-                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 border-[var(--line)] bg-[var(--accent)] text-sm font-black text-[#2d2552]">
-                        {LETTERS[i]}
+            {isPair(q) ? (
+              <div className="grid items-stretch gap-3 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
+                {q.options.map((opt, i) => (
+                  <Fragment key={opt.id}>
+                    {i === 1 && (
+                      <span className="self-center justify-self-center rounded-full border-[3px] border-[var(--line)] bg-[var(--accent)] px-3 py-1 text-sm font-black text-[#2d2552]">
+                        還是
                       </span>
-                      <span>{opt.text}</span>
-                    </>
-                  )}
-                </button>
-              ))}
-            </div>
+                    )}
+                    <button
+                      type="button"
+                      className="option min-h-24 !justify-center !py-5 !text-center text-lg"
+                      onClick={() => onChoose(opt.id)}
+                    >
+                      {opt.text}
+                    </button>
+                  </Fragment>
+                ))}
+              </div>
+            ) : (
+              <div className={q.type === "boolean" ? "grid grid-cols-2 gap-3" : "flex flex-col gap-3"}>
+                {q.options.map((opt, i) => (
+                  <button key={opt.id} type="button" className="option" onClick={() => onChoose(opt.id)}>
+                    {q.type === "boolean" ? (
+                      <span className="w-full py-2 text-center text-lg">{BOOLEAN_LABEL[opt.text] ?? opt.text}</span>
+                    ) : (
+                      <>
+                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 border-[var(--line)] bg-[var(--accent)] text-sm font-black text-[#2d2552]">
+                          {LETTERS[i]}
+                        </span>
+                        <span>{opt.text}</span>
+                      </>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
             <div className="mt-6 text-center">
               <button
                 type="button"
                 onClick={() => onChoose(null)}
                 className="cursor-pointer rounded-full px-4 py-2 text-sm font-bold text-[var(--ink-soft)] underline-offset-4 transition-colors hover:text-[var(--ink)] hover:underline"
               >
-                很難說，跳過這題
+                {isPair(q) ? "兩個都像或都不像？跳過這題" : "很難說，跳過這題"}
               </button>
             </div>
           </motion.div>

@@ -8,6 +8,7 @@ import {
   type EngineConfig,
 } from "./engine";
 import { HINT_QUESTION, isHint } from "./hint";
+import { stemOf } from "./pairs";
 import type { Question } from "./types";
 
 export interface Step {
@@ -36,9 +37,10 @@ function recentCategories(steps: Step[]): string[] {
   return steps.slice(-2).map((s) => s.question.category);
 }
 
+/** 問過的原題整題排除，避免同一題的不同二選一在一局裡重複出現 */
 function remainingPool(bank: Question[], steps: Step[]): Question[] {
-  const asked = new Set(steps.map((s) => s.question.id));
-  return bank.filter((q) => !asked.has(q.id));
+  const asked = new Set(steps.map((s) => stemOf(s.question)));
+  return bank.filter((q) => !asked.has(stemOf(q)));
 }
 
 export function startRound(bank: Question[], rng: () => number, config: EngineConfig = DEFAULT_CONFIG): Round {
