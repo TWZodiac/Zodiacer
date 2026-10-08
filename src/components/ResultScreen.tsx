@@ -34,12 +34,19 @@ export function ResultScreen({
 
   const headline =
     correct === true
-      ? { mood: "happy" as const, title: "被我猜中了吧！", sub: `只用了 ${round.steps.length} 題就看穿你` }
+      ? {
+          mood: "happy" as const,
+          title: "被我猜中了吧！",
+          sub:
+            outcome.hint === "used"
+              ? `用了絕招，${round.steps.length} 題猜中你`
+              : `沒用絕招，${round.steps.length} 題就看穿你`,
+        }
       : correct === false
         ? {
             mood: "pout" as const,
             title: "你騙過了星靈！",
-            sub: `星靈猜${guessedSign.name}座，${sign.name}座排在第 ${actualRank} 名`,
+            sub: `星靈${outcome.hint === "used" ? "用了絕招還是" : ""}猜${guessedSign.name}座，${sign.name}座排在第 ${actualRank} 名`,
           }
         : { mood: "wow" as const, title: `星靈的答案：${guessedSign.name}座`, sub: "沒關係，這是你的祕密" };
 

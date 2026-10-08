@@ -1,6 +1,6 @@
 export type QuestionType = "boolean" | "single";
 
-export type Category = "個性" | "社交" | "愛情" | "工作" | "金錢" | "情緒" | "生活" | "美感" | "冒險";
+export type Category = "個性" | "社交" | "愛情" | "工作" | "金錢" | "情緒" | "生活" | "美感" | "冒險" | "絕招";
 
 export interface QuestionOption {
   id: string;
@@ -9,6 +9,8 @@ export interface QuestionOption {
 
 export interface Question {
   id: number;
+  /** "hint" 是星靈卡關時才會出現的絕招題，不在題庫裡 */
+  kind?: "hint";
   type: QuestionType;
   category: Category;
   text: string;

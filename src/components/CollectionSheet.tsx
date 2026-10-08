@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Download, Lock, Trophy, X } from "lucide-react";
+import { ClipboardCopy, Download, Lock, Trophy, X } from "lucide-react";
 import { SIGN_PROFILES } from "@/domain/signs";
 import { ACHIEVEMENTS } from "@/domain/achievements";
 import { hitRate, type Profile } from "@/domain/profile";
@@ -12,6 +12,19 @@ import { ConstellationArt } from "./ConstellationArt";
 export function CollectionSheet({ profile, onClose }: { profile: Profile; onClose: () => void }) {
   const closeRef = useRef<HTMLButtonElement>(null);
   const rate = hitRate(profile);
+  const [copy, setCopy] = useState<"idle" | "copied" | "manual">("idle");
+  // 嵌在別的頁面裡（例如試玩預覽）時瀏覽器常會擋下載，只提供複製
+  const embedded = window.self !== window.top;
+  const json = JSON.stringify(profile, null, 2);
+
+  const copyRecords = async () => {
+    try {
+      await navigator.clipboard.writeText(json);
+      setCopy("copied");
+    } catch {
+      setCopy("manual");
+    }
+  };
 
   useEffect(() => {
     closeRef.current?.focus();
@@ -87,14 +100,31 @@ export function CollectionSheet({ profile, onClose }: { profile: Profile; onClos
           })}
         </ul>
 
-        <button
-          type="button"
-          onClick={() => downloadProfile(profile)}
-          disabled={profile.plays.length === 0}
-          className="btn btn-ghost w-full text-sm"
-        >
-          <Download size={16} aria-hidden /> 匯出我的作答紀錄（JSON）
-        </button>
+        <div className={`grid gap-2 ${embedded ? "" : "sm:grid-cols-2"}`}>
+          <button type="button" onClick={copyRecords} disabled={profile.plays.length === 0} className="btn btn-ghost w-full text-sm">
+            <ClipboardCopy size={16} aria-hidden /> {copy === "copied" ? "已複製作答紀錄" : "複製作答紀錄"}
+          </button>
+          {!embedded && (
+            <button
+              type="button"
+              onClick={() => downloadProfile(profile)}
+              disabled={profile.plays.length === 0}
+              className="btn btn-ghost w-full text-sm"
+            >
+              <Download size={16} aria-hidden /> 下載 JSON
+            </button>
+          )}
+        </div>
+        {copy === "manual" && (
+          <textarea
+            id="records-json"
+            readOnly
+            value={json}
+            onFocus={(e) => e.currentTarget.select()}
+            aria-label="作答紀錄 JSON，請全選後複製"
+            className="mt-3 h-32 w-full rounded-2xl border-2 border-[var(--line)] bg-[var(--card-2)] p-3 font-mono text-xs"
+          />
+        )}
         <p className="mt-2 text-center text-xs text-[var(--ink-soft)]">紀錄只存在這台裝置的瀏覽器裡。</p>
       </motion.div>
     </motion.div>

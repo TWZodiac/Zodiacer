@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useState } from "react";
 import bankJson from "@/data/question_bank.json";
 import { optionLeader, rankSigns } from "@/domain/engine";
-import { answer, answeredCount, startRound, undo, type Round } from "@/domain/game";
+import { answer, answeredCount, hintState, startRound, undo, type HintState, type Round } from "@/domain/game";
+import { hintCandidates, isHint } from "@/domain/hint";
 import { addPlay, emptyProfile, updateLastPlay, type Profile } from "@/domain/profile";
 import { unlockedIds } from "@/domain/achievements";
 import type { Question, QuestionBank } from "@/domain/types";
@@ -13,15 +14,15 @@ export const BANK = (bankJson as unknown as QuestionBank).questions as Question[
 
 export type Phase = "home" | "quiz" | "reveal" | "result";
 
-export interface Reaction {
-  questionId: number;
-  optionText: string;
-  sign: number;
-}
+export type Reaction =
+  | { kind: "lift"; optionText: string; sign: number }
+  | { kind: "hint"; signs: number[] }
+  | { kind: "refuse" };
 
 export interface Outcome {
   guessed: number;
   actual: number | null;
+  hint: HintState;
   newCard: boolean;
   newAchievements: string[];
 }
@@ -59,9 +60,11 @@ export function useZodiacGame() {
       if (!q) return;
       const next = answer(round, optionId, BANK, Math.random);
       setRound(next);
-      if (optionId) {
+      if (isHint(q)) {
+        setReaction(optionId ? { kind: "hint", signs: hintCandidates(optionId) } : { kind: "refuse" });
+      } else if (optionId) {
         const option = q.options.find((o) => o.id === optionId);
-        setReaction({ questionId: q.id, optionText: option?.text ?? "", sign: optionLeader(q.weights[optionId]).sign });
+        setReaction({ kind: "lift", optionText: option?.text ?? "", sign: optionLeader(q.weights[optionId]).sign });
       } else {
         setReaction(null);
       }
@@ -80,6 +83,7 @@ export function useZodiacGame() {
   const confirm = useCallback(
     (actual: number | null) => {
       const guessed = rankSigns(round.priors)[0];
+      const hint = hintState(round.steps);
       const before = unlockedIds(profile);
       let next = addPlay(profile, {
         at: new Date().toISOString(),
@@ -87,6 +91,7 @@ export function useZodiacGame() {
         actual: null,
         correct: null,
         questions: answeredCount(round),
+        hint,
         priors: round.priors,
         answers: round.steps.map((s) => ({ questionId: s.question.id, optionId: s.optionId })),
       });
@@ -95,6 +100,7 @@ export function useZodiacGame() {
       setOutcome({
         guessed,
         actual,
+        hint,
         newCard: !profile.collected.includes(guessed),
         newAchievements: unlockedIds(next).filter((id) => !before.includes(id)),
       });

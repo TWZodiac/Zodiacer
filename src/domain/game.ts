@@ -1,11 +1,13 @@
 import {
   DEFAULT_CONFIG,
   bayesUpdate,
+  realisticLikelihoods,
   pickNextQuestion,
   shouldReveal,
   uniformPriors,
   type EngineConfig,
 } from "./engine";
+import { HINT_QUESTION, isHint } from "./hint";
 import type { Question } from "./types";
 
 export interface Step {
@@ -19,6 +21,15 @@ export interface Round {
   steps: Step[];
   current: Question | null;
   done: boolean;
+}
+
+/** 這局的絕招狀態：沒出現、用了、被玩家拒絕 */
+export type HintState = "none" | "used" | "refused";
+
+export function hintState(steps: Step[]): HintState {
+  const step = steps.find((s) => isHint(s.question));
+  if (!step) return "none";
+  return step.optionId ? "used" : "refused";
 }
 
 function recentCategories(steps: Step[]): string[] {
@@ -46,13 +57,24 @@ export function answer(
   const q = round.current;
   if (!q || round.done) return round;
 
-  const priors = optionId ? bayesUpdate(round.priors, q.weights[optionId], config.alpha) : round.priors;
+  // 絕招題問的是事實（生日季節），直接用精確機率，不做刻板印象的折扣
+  const hint = isHint(q);
+  const likelihoods = optionId
+    ? hint
+      ? q.weights[optionId]
+      : realisticLikelihoods(q.weights[optionId], config.stereotype)
+    : null;
+  const priors = likelihoods ? bayesUpdate(round.priors, likelihoods, hint ? 1 : config.alpha) : round.priors;
   const steps = [...round.steps, { question: q, optionId, priorsBefore: round.priors }];
   const answered = steps.filter((s) => s.optionId !== null).length;
 
   // 跳過也算進題數上限，避免無限跳題
   if (shouldReveal(priors, answered, config) || steps.length >= config.maxQuestions + 4) {
     return { priors, steps, current: null, done: true };
+  }
+  // 答滿 hintAfter 題還沒把握，就使出一次絕招
+  if (config.hintAfter !== null && answered >= config.hintAfter && hintState(steps) === "none") {
+    return { priors, steps, current: HINT_QUESTION, done: false };
   }
   const next = pickNextQuestion(priors, remainingPool(bank, steps), recentCategories(steps), rng, config);
   return { priors, steps, current: next, done: next === null };

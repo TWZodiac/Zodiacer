@@ -1,3 +1,4 @@
+import type { HintState } from "./game";
 import type { Answer } from "./types";
 
 export interface PlayRecord {
@@ -8,6 +9,8 @@ export interface PlayRecord {
   actual: number | null;
   correct: boolean | null;
   questions: number;
+  /** 舊紀錄沒有這個欄位（當時還沒有絕招） */
+  hint?: HintState;
   priors: number[];
   answers: Answer[];
 }

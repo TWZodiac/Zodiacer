@@ -3,6 +3,12 @@ import type { Question } from "./types";
 export const SIGN_COUNT = 12;
 
 export interface EngineConfig {
+  /**
+   * 玩家有多符合自己星座的刻板印象（0–1）。
+   * 真人常常只有一部分像自己的星座，所以每個回答的似然值是
+   * 「刻板印象」與「一般人」的混合：stereotype·P(a|s) + (1−stereotype)·平均 P(a)。
+   */
+  stereotype: number;
   /** 每題證據的折扣，避免刻板印象題讓機率暴衝 */
   alpha: number;
   minQuestions: number;
@@ -13,18 +19,29 @@ export interface EngineConfig {
   topK: number;
   /** 與前兩題同主題時的資訊增益折扣 */
   repeatCategoryPenalty: number;
+  /** 答滿幾題還沒把握時，星靈使出絕招；null 代表不用絕招 */
+  hintAfter: number | null;
 }
 
 export const DEFAULT_CONFIG: EngineConfig = {
-  alpha: 0.85,
+  stereotype: 0.5,
+  alpha: 1,
   minQuestions: 8,
   maxQuestions: 16,
   confidence: 0.6,
   topK: 4,
   repeatCategoryPenalty: 0.6,
+  hintAfter: 8,
 };
 
 export const uniformPriors = (): number[] => Array(SIGN_COUNT).fill(1 / SIGN_COUNT);
+
+/** 把刻板印象的 P(a|s) 混入一般人的平均作答，得到真人會這樣答的機率 */
+export function realisticLikelihoods(likelihoods: number[], stereotype: number): number[] {
+  if (stereotype >= 1) return likelihoods;
+  const mean = likelihoods.reduce((a, b) => a + b, 0) / likelihoods.length;
+  return likelihoods.map((l) => stereotype * l + (1 - stereotype) * mean);
+}
 
 /** P(s|a) ∝ P(s) · P(a|s)^alpha */
 export function bayesUpdate(priors: number[], likelihoods: number[], alpha: number): number[] {
@@ -38,9 +55,10 @@ export function entropy(probs: number[]): number {
 }
 
 /** 在目前機率下，回答這題預期能減少多少不確定性（bits） */
-export function informationGain(priors: number[], q: Question): number {
+export function informationGain(priors: number[], q: Question, stereotype = 1): number {
   let ig = 0;
-  for (const likelihoods of Object.values(q.weights)) {
+  for (const raw of Object.values(q.weights)) {
+    const likelihoods = realisticLikelihoods(raw, stereotype);
     const pA = likelihoods.reduce((acc, l, s) => acc + l * priors[s], 0);
     if (pA <= 0) continue;
     for (let s = 0; s < SIGN_COUNT; s++) {
@@ -62,7 +80,7 @@ export function pickNextQuestion(
   const scored = pool
     .map((q) => {
       const penalty = recentCategories.includes(q.category) ? config.repeatCategoryPenalty : 1;
-      return { q, score: informationGain(priors, q) * penalty };
+      return { q, score: informationGain(priors, q, config.stereotype) * penalty };
     })
     .sort((a, b) => b.score - a.score)
     .slice(0, config.topK);

@@ -7,11 +7,33 @@ import { SIGN_PROFILES } from "@/domain/signs";
 import { hunch } from "@/domain/commentary";
 import { DEFAULT_CONFIG } from "@/domain/engine";
 import { answeredCount, type Round } from "@/domain/game";
+import { isHint } from "@/domain/hint";
 import type { Reaction } from "@/hooks/useZodiacGame";
 import { StarChart } from "./StarChart";
+import { HintCard } from "./HintCard";
 
 const BOOLEAN_LABEL: Record<string, string> = { 是: "是，很像我", 否: "不太像我" };
 const LETTERS = ["A", "B", "C", "D", "E", "F"];
+
+function ReactionLine({ reaction }: { reaction: Reaction }) {
+  if (reaction.kind === "lift") {
+    return (
+      <>
+        選「{reaction.optionText}」的人，最常是
+        <span className="font-black text-[var(--ink)]"> {SIGN_PROFILES[reaction.sign].name}座</span>
+      </>
+    );
+  }
+  if (reaction.kind === "hint") {
+    return (
+      <>
+        季節透視成功！只剩
+        <span className="font-black text-[var(--ink)]"> {reaction.signs.map((s) => SIGN_PROFILES[s].name).join("、")}座</span> 有可能
+      </>
+    );
+  }
+  return <>好吧，不偷看！我只好繼續靠讀心。</>;
+}
 
 export function QuizScreen({
   round,
@@ -29,7 +51,7 @@ export function QuizScreen({
   const q = round.current;
   const answered = answeredCount(round);
   const confidence = Math.max(...round.priors);
-  const mood = confidence > 0.45 ? "wow" : answered === 0 ? "idle" : "think";
+  const mood = q && isHint(q) ? "wow" : confidence > 0.45 ? "wow" : answered === 0 ? "idle" : "think";
 
   // 數字鍵 1–6 快速作答
   useEffect(() => {
@@ -88,55 +110,58 @@ export function QuizScreen({
             <motion.div key={round.steps.length} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               {reaction && (
                 <p className="mb-1 text-sm text-[var(--ink-soft)]">
-                  選「{reaction.optionText}」的人，最常是
-                  <span className="font-black text-[var(--ink)]"> {SIGN_PROFILES[reaction.sign].name}座</span>
+                  <ReactionLine reaction={reaction} />
                 </p>
               )}
-              <p className="font-bold">{hunch(round.priors, answered)}</p>
+              <p className="font-bold">{isHint(q) ? "這次有點難猜…讓我偷看一個小線索！" : hunch(round.priors, answered)}</p>
             </motion.div>
           </AnimatePresence>
         </div>
       </div>
 
       <AnimatePresence mode="wait">
-        <motion.div
-          key={q.id}
-          initial={{ opacity: 0, x: 40, rotate: 2 }}
-          animate={{ opacity: 1, x: 0, rotate: 0 }}
-          exit={{ opacity: 0, x: -40, rotate: -2 }}
-          transition={{ type: "spring", stiffness: 300, damping: 26 }}
-          className="sticker p-5 sm:p-7"
-        >
-          <span className="mb-3 inline-block rounded-full border-2 border-[var(--line)] bg-[var(--lilac)] px-3 py-0.5 text-xs font-black text-[#2d2552]">
-            {q.category}
-          </span>
-          <h2 className="font-display mb-6 text-2xl font-black leading-snug sm:text-[1.7rem]">{q.text}</h2>
-          <div className={q.type === "boolean" ? "grid grid-cols-2 gap-3" : "flex flex-col gap-3"}>
-            {q.options.map((opt, i) => (
-              <button key={opt.id} type="button" className="option" onClick={() => onChoose(opt.id)}>
-                {q.type === "boolean" ? (
-                  <span className="w-full py-2 text-center text-lg">{BOOLEAN_LABEL[opt.text] ?? opt.text}</span>
-                ) : (
-                  <>
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 border-[var(--line)] bg-[var(--accent)] text-sm font-black text-[#2d2552]">
-                      {LETTERS[i]}
-                    </span>
-                    <span>{opt.text}</span>
-                  </>
-                )}
+        {isHint(q) ? (
+          <HintCard key={q.id} question={q} onChoose={onChoose} />
+        ) : (
+          <motion.div
+            key={q.id}
+            initial={{ opacity: 0, x: 40, rotate: 2 }}
+            animate={{ opacity: 1, x: 0, rotate: 0 }}
+            exit={{ opacity: 0, x: -40, rotate: -2 }}
+            transition={{ type: "spring", stiffness: 300, damping: 26 }}
+            className="sticker p-5 sm:p-7"
+          >
+            <span className="mb-3 inline-block rounded-full border-2 border-[var(--line)] bg-[var(--lilac)] px-3 py-0.5 text-xs font-black text-[#2d2552]">
+              {q.category}
+            </span>
+            <h2 className="font-display mb-6 text-2xl font-black leading-snug sm:text-[1.7rem]">{q.text}</h2>
+            <div className={q.type === "boolean" ? "grid grid-cols-2 gap-3" : "flex flex-col gap-3"}>
+              {q.options.map((opt, i) => (
+                <button key={opt.id} type="button" className="option" onClick={() => onChoose(opt.id)}>
+                  {q.type === "boolean" ? (
+                    <span className="w-full py-2 text-center text-lg">{BOOLEAN_LABEL[opt.text] ?? opt.text}</span>
+                  ) : (
+                    <>
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 border-[var(--line)] bg-[var(--accent)] text-sm font-black text-[#2d2552]">
+                        {LETTERS[i]}
+                      </span>
+                      <span>{opt.text}</span>
+                    </>
+                  )}
+                </button>
+              ))}
+            </div>
+            <div className="mt-6 text-center">
+              <button
+                type="button"
+                onClick={() => onChoose(null)}
+                className="cursor-pointer rounded-full px-4 py-2 text-sm font-bold text-[var(--ink-soft)] underline-offset-4 transition-colors hover:text-[var(--ink)] hover:underline"
+              >
+                很難說，跳過這題
               </button>
-            ))}
-          </div>
-          <div className="mt-6 text-center">
-            <button
-              type="button"
-              onClick={() => onChoose(null)}
-              className="cursor-pointer rounded-full px-4 py-2 text-sm font-bold text-[var(--ink-soft)] underline-offset-4 transition-colors hover:text-[var(--ink)] hover:underline"
-            >
-              很難說，跳過這題
-            </button>
-          </div>
-        </motion.div>
+            </div>
+          </motion.div>
+        )}
       </AnimatePresence>
     </motion.section>
   );

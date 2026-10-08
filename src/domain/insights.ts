@@ -1,4 +1,5 @@
 import { answerAffinity } from "./engine";
+import { isHint } from "./hint";
 import type { Step } from "./game";
 
 export interface AnswerInsight {
@@ -11,7 +12,7 @@ export interface AnswerInsight {
 /** 找出最像、最不像某個星座的回答 */
 export function signInsights(steps: Step[], sign: number): { alike: AnswerInsight[]; unlike: AnswerInsight[] } {
   const scored: AnswerInsight[] = steps
-    .filter((s) => s.optionId !== null)
+    .filter((s) => s.optionId !== null && !isHint(s.question))
     .map((s) => ({
       questionText: s.question.text,
       optionText: s.question.options.find((o) => o.id === s.optionId)?.text ?? "",
