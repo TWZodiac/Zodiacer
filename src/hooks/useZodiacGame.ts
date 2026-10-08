@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import bankJson from "@/data/question_bank.json";
-import { optionLeader, rankSigns } from "@/domain/engine";
+import { DEFAULT_CONFIG, optionLeader, rankSigns } from "@/domain/engine";
 import { answer, answeredCount, hintState, startRound, undo, type HintState, type Round } from "@/domain/game";
 import { hintCandidates, isHint } from "@/domain/hint";
 import { toPairBank } from "@/domain/pairs";
@@ -11,8 +11,16 @@ import { unlockedIds } from "@/domain/achievements";
 import type { Question, QuestionBank } from "@/domain/types";
 import { loadProfile, saveProfile } from "@/lib/profileStorage";
 
+const SOURCE = (bankJson as unknown as QuestionBank).questions as Question[];
+
 /** 多選題拆成二選一，星靈每題挑當下最能分辨的兩個選項 */
-export const BANK = toPairBank((bankJson as unknown as QuestionBank).questions as Question[]);
+export const BANK = toPairBank(SOURCE);
+
+/** 首頁顯示的題數：原題數，不算拆出來的二選一 */
+export const QUESTION_COUNT = SOURCE.length;
+
+/** 一局最少、最多答幾題（絕招題也算一題） */
+export const ROUND_LENGTH = { min: DEFAULT_CONFIG.minQuestions, max: DEFAULT_CONFIG.maxQuestions };
 
 export type Phase = "home" | "quiz" | "reveal" | "result";
 
