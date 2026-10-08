@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { AnimatePresence, MotionConfig } from "framer-motion";
-import { BANK, useZodiacGame } from "@/hooks/useZodiacGame";
+import { QUESTION_COUNT, ROUND_LENGTH, useZodiacGame } from "@/hooks/useZodiacGame";
 import { HomeScreen } from "./HomeScreen";
 import { QuizScreen } from "./QuizScreen";
 import { RevealScreen } from "./RevealScreen";
@@ -22,7 +22,8 @@ export function ZodiacApp() {
             <HomeScreen
               key="home"
               profile={game.profile}
-              questionCount={BANK.length}
+              questionCount={QUESTION_COUNT}
+              roundLength={ROUND_LENGTH}
               onStart={game.start}
               onOpenCollection={() => setCollectionOpen(true)}
             />

@@ -11,11 +11,13 @@ import { ConstellationArt } from "./ConstellationArt";
 export function HomeScreen({
   profile,
   questionCount,
+  roundLength,
   onStart,
   onOpenCollection,
 }: {
   profile: Profile;
   questionCount: number;
+  roundLength: { min: number; max: number };
   onStart: () => void;
   onOpenCollection: () => void;
 }) {
@@ -63,7 +65,7 @@ export function HomeScreen({
       <dl className="mt-10 grid w-full grid-cols-3 gap-3">
         {[
           { label: "題庫", value: `${questionCount} 題` },
-          { label: "每局", value: "8–16 題" },
+          { label: "每局", value: `${roundLength.min}–${roundLength.max} 題` },
           { label: "星靈命中率", value: rate === null ? "—" : `${Math.round(rate * 100)}%` },
         ].map((item) => (
           <div key={item.label} className="sticker px-2 py-3">
