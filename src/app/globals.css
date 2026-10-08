@@ -1,0 +1,156 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-comic), ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-baloo), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, monospace;
+}
+
+:root {
+  --background: #EEF2FF;
+  --background-mid: #E0E7FF;
+  --background-end: #C7D2FE;
+  --foreground: #1E1B4B;
+
+  --primary: #4F46E5;
+  --secondary: #818CF8;
+  --cta: #F97316;
+  --cta-hover: #EA580C;
+
+  --glass-bg: #FFFFFF;
+  --glass-border: #818CF8;
+
+  --shadow-sm: 0 1px 2px rgba(79, 70, 229, 0.1);
+  --shadow-md: 0 4px 6px rgba(79, 70, 229, 0.2);
+  --shadow-lg: 0 10px 15px rgba(79, 70, 229, 0.3);
+  --shadow-xl: 0 20px 25px rgba(79, 70, 229, 0.4);
+  --shadow-glow: 0 0 15px rgba(249, 115, 22, 0.6);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0f172a;
+    --background-mid: #1e1b4b;
+    --background-end: #0c0a09;
+    --foreground: #EEF2FF;
+
+    --primary: #4F46E5;
+    --secondary: #818CF8;
+    --cta: #F97316;
+    --cta-hover: #FB923C;
+
+    --glass-bg: #1e1b4b;
+    --glass-border: #4F46E5;
+
+    --shadow-sm: 0 2px 0px rgba(0, 0, 0, 0.8);
+    --shadow-md: 0 4px 0px rgba(0, 0, 0, 1);
+    --shadow-lg: 0 6px 0px rgba(0, 0, 0, 1);
+    --shadow-xl: 0 8px 0px rgba(0, 0, 0, 1);
+    --shadow-glow: 0 0 20px rgba(249, 115, 22, 0.8);
+  }
+}
+
+html {
+  font-family: var(--font-sans);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  min-height: 100vh;
+  position: relative;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.font-heading {
+  font-family: var(--font-heading);
+}
+
+/* CRT Scanline overlay effect for arcade feel */
+body::before {
+  content: " ";
+  display: block;
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+  z-index: 50;
+  background-size: 100% 4px, 6px 100%;
+  pointer-events: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  body {
+    background: linear-gradient(135deg, var(--background), var(--background-mid), var(--background-end));
+    background-attachment: fixed;
+  }
+}
+
+.glass-panel {
+  background: var(--glass-bg);
+  border: 4px solid var(--primary);
+  border-radius: 16px;
+  box-shadow: var(--shadow-xl);
+  transition: all 200ms ease;
+}
+
+.glass-panel:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 0px rgba(0, 0, 0, 1);
+}
+
+.btn-primary {
+  @apply px-6 py-3 rounded-xl font-bold transition-all duration-300;
+  background: var(--cta);
+  color: #FAFAF9;
+  border: 4px solid #9A3412;
+  box-shadow: 0 4px 0px #9A3412;
+  font-family: var(--font-heading);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.btn-primary:hover {
+  background: var(--cta-hover);
+  transform: translateY(2px);
+  box-shadow: 0 2px 0px #9A3412, var(--shadow-glow);
+}
+
+.btn-primary:active {
+  transform: translateY(4px);
+  box-shadow: 0 0px 0px #9A3412;
+}
+
+.btn-secondary {
+  @apply px-6 py-3 rounded-xl font-bold transition-all duration-300;
+  background: transparent;
+  color: var(--primary);
+  border: 4px solid var(--primary);
+  box-shadow: 0 4px 0px var(--primary);
+  font-family: var(--font-heading);
+}
+
+.btn-secondary:hover {
+  background: rgba(79, 70, 229, 0.1);
+  transform: translateY(2px);
+  box-shadow: 0 2px 0px var(--primary);
+}
+
+.btn-secondary:active {
+  transform: translateY(4px);
+  box-shadow: 0 0px 0px var(--primary);
+}
+
+/* Neon text glitch effect utility */
+.glitch-text {
+  text-shadow: 2px 2px 0px var(--primary), -2px -2px 0px var(--secondary);
+  font-family: var(--font-heading);
+}
